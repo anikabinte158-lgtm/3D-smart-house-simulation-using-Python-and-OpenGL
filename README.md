@@ -5,7 +5,7 @@ The **3D Smart House** is an interactive 3D house project developed using Python
 
 The main purpose of this project is to demonstrate 3D modeling, computer graphics, animation, lighting, and user interaction.
 
-## 🛠️ Technologies Used
+## Technologies Used
 - Python
 - PyOpenGL
 - OpenGL
