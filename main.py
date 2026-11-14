@@ -15,6 +15,10 @@ day_mode = True
 light_on = True
 fan_on = True
 
+# CAMERA VIEW
+# 1 = Front, 2 = Left, 3 = Right, 4 = Top, 5 = Original 3D
+camera_view = 5
+
 fan_angle = 0.0
 door_angle = 0.0
 door_target = 0.0
@@ -176,14 +180,12 @@ def draw_roof():
 
 # ==========================================================
 # WINDOW OUTSIDE SCENERY
-# Changes automatically between day and night.
 # ==========================================================
 
 def draw_window_scenery(x, y, w, h, z):
 
     lighting_was_on = glIsEnabled(GL_LIGHTING)
 
-    # Keep scenery visible even when house lights are ON or OFF.
     glDisable(GL_LIGHTING)
 
     if day_mode:
@@ -215,10 +217,11 @@ def draw_window_scenery(x, y, w, h, z):
     glVertex3f(left, top, z)
     glEnd()
 
-    # Sun in daytime / moon at night
+    # Sun / Moon
     glColor3f(*sun_color)
     glBegin(GL_TRIANGLE_FAN)
     glVertex3f(x + w * 0.29, y + h * 0.25, z - 0.015)
+
     for i in range(33):
         angle = 2.0 * math.pi * i / 32
         glVertex3f(
@@ -233,17 +236,20 @@ def draw_window_scenery(x, y, w, h, z):
         glColor3f(1.0, 1.0, 0.85)
         glPointSize(3)
         glBegin(GL_POINTS)
+
         for sx, sy in [
             (-0.30, 0.30), (-0.12, 0.38),
             (0.05, 0.22), (0.34, 0.05),
             (-0.38, -0.02), (0.12, 0.40)
         ]:
             glVertex3f(x + sx * w, y + sy * h, z - 0.02)
+
         glEnd()
 
     # Distant hills
     glColor3f(*hill1)
     glBegin(GL_TRIANGLES)
+
     glVertex3f(left, bottom + h * 0.35, z - 0.025)
     glVertex3f(x - w * 0.12, bottom + h * 0.70, z - 0.025)
     glVertex3f(x + w * 0.18, bottom + h * 0.35, z - 0.025)
@@ -251,35 +257,43 @@ def draw_window_scenery(x, y, w, h, z):
     glVertex3f(x - w * 0.10, bottom + h * 0.35, z - 0.025)
     glVertex3f(x + w * 0.30, bottom + h * 0.68, z - 0.025)
     glVertex3f(right, bottom + h * 0.35, z - 0.025)
+
     glEnd()
 
     # Ground
     glColor3f(*ground)
     glBegin(GL_QUADS)
+
     glVertex3f(left, bottom, z - 0.03)
     glVertex3f(right, bottom, z - 0.03)
     glVertex3f(right, bottom + h * 0.30, z - 0.03)
     glVertex3f(left, bottom + h * 0.30, z - 0.03)
+
     glEnd()
 
     # Small trees
     for tx in [-0.34, 0.02, 0.36]:
+
         tree_x = x + tx * w
         tree_y = bottom + h * 0.30
 
         glColor3f(0.30, 0.16, 0.07)
         glBegin(GL_QUADS)
+
         glVertex3f(tree_x - w * 0.018, tree_y, z - 0.045)
         glVertex3f(tree_x + w * 0.018, tree_y, z - 0.045)
         glVertex3f(tree_x + w * 0.018, tree_y + h * 0.22, z - 0.045)
         glVertex3f(tree_x - w * 0.018, tree_y + h * 0.22, z - 0.045)
+
         glEnd()
 
         glColor3f(*tree_color)
         glBegin(GL_TRIANGLES)
+
         glVertex3f(tree_x - w * 0.12, tree_y + h * 0.12, z - 0.05)
         glVertex3f(tree_x, tree_y + h * 0.48, z - 0.05)
         glVertex3f(tree_x + w * 0.12, tree_y + h * 0.12, z - 0.05)
+
         glEnd()
 
     if lighting_was_on:
@@ -288,7 +302,6 @@ def draw_window_scenery(x, y, w, h, z):
 
 def draw_window(x, y, z):
 
-    # Scenery is behind the wooden frame.
     draw_window_scenery(x, y, 1.45, 1.30, z - 0.035)
 
     # Wooden frame
@@ -699,7 +712,11 @@ def draw_house():
 
     draw_garden()
     draw_structure()
-    draw_gable()
+
+    # Hide gable in Top View
+    if camera_view != 4:
+        draw_gable()
+
     draw_windows()
 
     draw_movable_group("bedroom", draw_bedroom)
@@ -714,7 +731,10 @@ def draw_house():
     draw_fan(-3.0, 8.25, 0)
     draw_fan(-3.0, 3.92, 0)
 
-    draw_roof()
+    # Hide roof in Top View
+    if camera_view != 4:
+        draw_roof()
+
     draw_door()
 
 
@@ -848,6 +868,10 @@ def motion(x, y):
     glutPostRedisplay()
 
 
+# ==========================================================
+# SPECIAL KEYBOARD
+# ==========================================================
+
 def special_keyboard(key, x, y):
 
     if selected_group is None:
@@ -886,13 +910,49 @@ def display():
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-    # STRAIGHT FRONT CAMERA VIEW
-    gluLookAt(
-        0.0, 7.0, 27.0,
-        0.0, 5.0, 0.0,
-        0.0, 1.0, 0.0
-    )
+    # CAMERA VIEWS
 
+    if camera_view == 1:
+        # FRONT VIEW
+        gluLookAt(
+          0.0, 7.0, 25.0,
+          0.0, 4.5, 0.5,
+          0.0, 1.0, 0.0
+         )
+
+    elif camera_view == 2:
+        # LEFT SIDE VIEW
+        gluLookAt(
+            -32.0, 8.0, 1.5,
+            0.0, 4.5, 1.5,
+            0.0, 1.0, 0.0
+        )
+
+    elif camera_view == 3:
+        # RIGHT SIDE VIEW
+        gluLookAt(
+            32.0, 8.0, 1.5,
+            0.0, 4.5, 1.5,
+            0.0, 1.0, 0.0
+        )
+
+    elif camera_view == 4:
+        # TOP VIEW
+        gluLookAt(
+            0.0, 35.0, 1.5,
+            0.0, 3.5, 1.5,
+            0.0, 0.0, -1.0
+        )
+
+    else:
+        # ORIGINAL 3D VIEW
+        gluLookAt(
+            -13.5, 10.0, 24.0,
+            0.0, 4.5, 0.5,
+            0.0, 1.0, 0.0
+        )
+
+    # LIGHTING
     if light_on:
 
         glEnable(GL_LIGHTING)
@@ -968,10 +1028,28 @@ def keyboard(key, x, y):
     global table_x, table_z
     global door_target
     global day_mode, light_on, fan_on
+    global camera_view
 
     step = 0.15
 
-    if key in (b'w', b'W'):
+    # CAMERA CONTROLS
+    if key == b'5':
+        camera_view = 1
+
+    elif key == b'6':
+        camera_view = 2
+
+    elif key == b'7':
+        camera_view = 3
+
+    elif key == b'8':
+        camera_view = 4
+
+    elif key == b'9':
+        camera_view = 5
+
+    # Move selected object or coffee table
+    elif key in (b'w', b'W'):
 
         if selected_group:
             group_offsets[selected_group][2] -= step
@@ -1074,7 +1152,7 @@ def reshape(width, height):
         42,
         WIDTH / HEIGHT,
         0.1,
-        100
+        150
     )
 
     glMatrixMode(GL_MODELVIEW)
@@ -1098,7 +1176,7 @@ def main():
     glutInitWindowPosition(50, 30)
 
     glutCreateWindow(
-        b"Smart Doll House - Front View"
+        b"Smart Doll House - Multi Camera View"
     )
 
     glEnable(GL_DEPTH_TEST)
